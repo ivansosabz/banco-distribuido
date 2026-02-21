@@ -4,7 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from accounts.models import Account
 from transactions.models import Transaction
-
+from decimal import Decimal
 
 @csrf_exempt
 @require_POST
@@ -13,7 +13,8 @@ def recibir_transferencia(request):
         data = json.loads(request.body)
 
         numero_cuenta = data.get("cuenta_destino")
-        monto = float(data.get("monto"))
+        # monto = float(data.get("monto"))
+        monto = Decimal(str(data.get("monto")))  # Convertir a Decimal para precisión
         banco_origen = data.get("banco_origen")
 
         cuenta = Account.objects.get(numero_cuenta=numero_cuenta)
