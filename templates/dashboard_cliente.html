@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Cliente{% endblock %}
+
+{% block content %}
+<h2>Dashboard Cliente</h2>
+
+<div class="card p-3 shadow-sm">
+    <p>Bienvenido {{ request.user.username }}</p>
+    <p>Aquí podrás consultar tu cuenta y realizar transferencias.</p>
+</div>
+{% endblock %}

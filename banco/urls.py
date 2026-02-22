@@ -20,4 +20,7 @@ from django.urls import path, include
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("api.urls")),
+    path("", include("web.urls")),
+    path("accounts/", include("django.contrib.auth.urls")), 
+    # significa que se incluirán las URLs de autenticación de Django (login, logout, password_change, etc.)
 ]
