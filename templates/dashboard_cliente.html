@@ -29,4 +29,27 @@
 </div>
 {% endif %}
 
+<h3 class="mt-4">Historial de Transacciones</h3>
+
+<table class="table table-sm table-striped shadow-sm">
+    <thead class="table-light">
+        <tr>
+            <th>Tipo</th>
+            <th>Monto</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cuenta in cuentas %}
+        {% for t in cuenta.transacciones_origen.all %}
+        <tr>
+            <td>{{ t.tipo_transaccion }}</td>
+            <td>{{ t.monto }}</td>
+            <td>{{ t.estado }}</td>
+        </tr>
+        {% endfor %}
+        {% endfor %}
+    </tbody>
+</table>
+
 {% endblock %}
