@@ -1,16 +1,29 @@
 {% extends "base.html" %}
 
-{% block title %}Admin{% endblock %}
+{% block title %}Administrador{% endblock %}
 
 {% block content %}
-<h2>Dashboard Administrador</h2>
+<h2 class="mb-4">Panel del Banco</h2>
 
-<div class="card p-3 shadow-sm">
-    <p>Bienvenido {{ request.user.username }}</p>
-    <p>Desde aquí puedes gestionar cuentas y transacciones.</p>
+<table class="table table-striped shadow-sm">
+    <thead class="table-primary">
+        <tr>
+            <th>Número</th>
+            <th>Cliente</th>
+            <th>Moneda</th>
+            <th>Saldo</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cuenta in cuentas %}
+        <tr>
+            <td>{{ cuenta.numero_cuenta }}</td>
+            <td>{{ cuenta.cliente.nombres }} {{ cuenta.cliente.apellidos }}</td>
+            <td>{{ cuenta.moneda }}</td>
+            <td>{{ cuenta.saldo_actual }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
-    <a href="/admin/" class="btn btn-primary">
-        Ir al panel de administración
-    </a>
-</div>
 {% endblock %}

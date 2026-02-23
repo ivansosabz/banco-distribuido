@@ -35,9 +35,12 @@
                 <span class="text-white me-3">
                     {{ request.user.username }}
                 </span>
-                <a href="/accounts/logout/" class="btn btn-light btn-sm">
-                    Cerrar sesión
-                </a>
+                <form method="post" action="/accounts/logout/" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-light btn-sm">
+                        Cerrar sesión
+                    </button>
+                </form>
                 {% else %}
                 <a href="/accounts/login/" class="btn btn-light btn-sm">
                     Iniciar sesión

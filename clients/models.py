@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 
 class Client(models.Model):
@@ -16,7 +17,10 @@ class Client(models.Model):
         PENDIENTE = "pendiente_verificacion", "Pendiente Verificación"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
+    
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, null=True, blank=True, related_name="cliente"
+    )
     tipo_identificacion = models.CharField(
         max_length=20, choices=TipoIdentificacion.choices
     )
