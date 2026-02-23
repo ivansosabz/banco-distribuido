@@ -3,53 +3,63 @@
 {% block title %}Cliente{% endblock %}
 
 {% block content %}
-<a href="{% url 'transferencia_interna' %}" class="btn btn-primary mb-3">
-    Realizar Transferencia
-</a>
-<a href="{% url 'transferencia_externa' %}" class="btn btn-warning mb-3">
-    Transferencia Externa
-</a>
-<h2 class="mb-4">Mis Cuentas</h2>
+<div class="d-flex gap-2 mb-4">
+    <a href="{% url 'transferencia_interna' %}" class="btn btn-primary">
+        Realizar Transferencia
+    </a>
+    <a href="{% url 'transferencia_externa' %}" class="btn btn-warning">
+        Transferencia Externa
+    </a>
+</div>
 
+<h2 class="mb-3">Mis Cuentas</h2>
 {% if cuentas %}
 <div class="row">
     {% for cuenta in cuentas %}
     <div class="col-md-4 mb-3">
-        <div class="card shadow-sm p-3">
-            <h5>Cuenta {{ cuenta.numero_cuenta }}</h5>
-            <p><strong>Moneda:</strong> {{ cuenta.moneda }}</p>
-            <p><strong>Saldo:</strong> {{ cuenta.saldo_actual }}</p>
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Cuenta {{ cuenta.numero_cuenta }}</h5>
+                <p class="card-text mb-1"><strong>Moneda:</strong> {{ cuenta.moneda }}</p>
+                <p class="card-text"><strong>Saldo:</strong> {{ cuenta.saldo_actual }}</p>
+            </div>
         </div>
     </div>
     {% endfor %}
 </div>
 {% else %}
-<div class="alert alert-info">
-    No tienes cuentas asociadas.
-</div>
+<div class="alert alert-info">No tienes cuentas asociadas.</div>
 {% endif %}
 
-<h3 class="mt-4">Historial de Transacciones</h3>
-
-<table class="table table-sm table-striped shadow-sm">
-    <thead class="table-light">
-        <tr>
-            <th>Tipo</th>
-            <th>Monto</th>
-            <th>Estado</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for cuenta in cuentas %}
-        {% for t in cuenta.transacciones_origen.all %}
-        <tr>
-            <td>{{ t.tipo_transaccion }}</td>
-            <td>{{ t.monto }}</td>
-            <td>{{ t.estado }}</td>
-        </tr>
-        {% endfor %}
-        {% endfor %}
-    </tbody>
-</table>
-
+<h3 class="mt-4 mb-3">Historial de Transacciones</h3>
+{% if transacciones %}
+<div class="table-responsive">
+    <table class="table table-sm table-hover shadow-sm">
+        <thead class="table-light">
+            <tr>
+                <th>Tipo</th>
+                <th>Monto</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in transacciones %}
+            <tr>
+                <td>
+                    {% if t.tipo == "Enviado" %}
+                    <span class="text-danger fw-bold">Enviado</span>
+                    {% else %}
+                    <span class="text-success fw-bold">Recibido</span>
+                    {% endif %}
+                </td>
+                <td>{{ t.monto }}</td>
+                <td>{{ t.estado }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">No hay transacciones registradas.</div>
+{% endif %}
 {% endblock %}

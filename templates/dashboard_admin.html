@@ -1,29 +1,39 @@
 {% extends "base.html" %}
 
-{% block title %}Administrador{% endblock %}
+{% block title %}Panel del Banco{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Panel del Banco</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">🏦 Panel del Banco</h2>
+    <span class="badge bg-primary fs-6">{{ cuentas|length }} cuentas</span>
+</div>
 
-<table class="table table-striped shadow-sm">
-    <thead class="table-primary">
-        <tr>
-            <th>Número</th>
-            <th>Cliente</th>
-            <th>Moneda</th>
-            <th>Saldo</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for cuenta in cuentas %}
-        <tr>
-            <td>{{ cuenta.numero_cuenta }}</td>
-            <td>{{ cuenta.cliente.nombres }} {{ cuenta.cliente.apellidos }}</td>
-            <td>{{ cuenta.moneda }}</td>
-            <td>{{ cuenta.saldo_actual }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
+{% if cuentas %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle shadow-sm">
+        <thead class="table-primary">
+            <tr>
+                <th>Número de cuenta</th>
+                <th>Cliente</th>
+                <th>Moneda</th>
+                <th>Saldo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cuenta in cuentas %}
+            <tr>
+                <td><code>{{ cuenta.numero_cuenta }}</code></td>
+                <td>{{ cuenta.cliente.nombres }} {{ cuenta.cliente.apellidos }}</td>
+                <td>{{ cuenta.moneda }}</td>
+                <td class="fw-bold">${{ cuenta.saldo_actual }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    📭 No hay cuentas registradas en el sistema.
+</div>
+{% endif %}
 {% endblock %}

@@ -14,6 +14,7 @@ import requests
 def home(request):
     return render(request, "home.html")
 
+
 @login_required
 def dashboard(request):
 
@@ -25,10 +26,40 @@ def dashboard(request):
     try:
         cliente = request.user.cliente
         cuentas = cliente.cuentas.all()
+
+        transacciones = []
+
+        for cuenta in cuentas:
+
+            # Transacciones enviadas
+            for t in cuenta.transacciones_origen.all():
+                transacciones.append(
+                    {
+                        "tipo": "Enviado",
+                        "monto": t.monto,
+                        "estado": t.estado,
+                    }
+                )
+
+            # Transacciones recibidas
+            for t in cuenta.transacciones_destino.all():
+                transacciones.append(
+                    {
+                        "tipo": "Recibido",
+                        "monto": t.monto,
+                        "estado": t.estado,
+                    }
+                )
+
     except:
         cuentas = []
+        transacciones = []
 
-    return render(request, "dashboard_cliente.html", {"cuentas": cuentas})
+    return render(
+        request,
+        "dashboard_cliente.html",
+        {"cuentas": cuentas, "transacciones": transacciones},
+    )
 
 
 @login_required

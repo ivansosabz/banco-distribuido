@@ -1,27 +1,38 @@
 {% extends "base.html" %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Iniciar Sesión{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-4">
-        <div class="card shadow-sm p-4">
-            <h4 class="text-center mb-3">Iniciar Sesión</h4>
+    <div class="col-md-5 col-lg-4">
+        <div class="card shadow border-0">
+            <div class="card-body p-4">
+                <h4 class="text-center mb-4">🔐 Iniciar Sesión</h4>
 
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
+                <form method="post">
+                    {% csrf_token %}
 
-                <button type="submit" class="btn btn-primary w-100">
-                    Ingresar
-                </button>
-            </form>
+                    <div class="mb-3">
+                        <label class="form-label">Usuario</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
 
-            {% if form.errors %}
-            <div class="alert alert-danger mt-3">
-                Usuario o contraseña incorrectos.
+                    <div class="mb-3">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2">
+                        Ingresar
+                    </button>
+                </form>
+
+                {% if form.errors %}
+                <div class="alert alert-danger mt-3 mb-0 py-2">
+                    ⚠️ Usuario o contraseña incorrectos
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
 </div>

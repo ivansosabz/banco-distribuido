@@ -3,16 +3,39 @@
 {% block title %}Transferencia Externa{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Transferencia Externa</h2>
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+        <div class="card shadow border-0">
+            <div class="card-body p-4">
+                <h2 class="h4 mb-4">🌐 Transferencia a otro banco</h2>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <div class="text-danger small mt-1">{{ field.errors }}</div>
+                        {% endif %}
+                        {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
 
-<div class="card p-4 shadow-sm col-md-6">
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-
-        <button type="submit" class="btn btn-primary">
-            Transferir
-        </button>
-    </form>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary px-4">
+                            Transferir
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary px-4">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
