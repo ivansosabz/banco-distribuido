@@ -1,15 +1,17 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from accounts.models import Account
-from django.shortcuts import redirect
 from django.contrib import messages
-from .forms import TransferenciaInternaForm
-from .forms import TransferenciaExternaForm
-from transactions.models import Transaction
 from django.db import transaction as db_transaction
+from accounts.models import Account
+from transactions.models import Transaction
+from .forms import TransferenciaInternaForm, TransferenciaExternaForm
 import requests
+
+
+def _get_choices(cuentas_cliente):
+    return [(c.id, c.numero_cuenta) for c in cuentas_cliente]
+
 
 def home(request):
     return render(request, "home.html")
@@ -23,37 +25,38 @@ def dashboard(request):
         return render(request, "dashboard_admin.html", {"cuentas": cuentas})
 
     # Cliente normal
-    try:
-        cliente = request.user.cliente
-        cuentas = cliente.cuentas.all()
+    cliente = request.user.cliente
+    cuentas = cliente.cuentas.all()
 
-        transacciones = []
+    transacciones = []
 
-        for cuenta in cuentas:
+    for cuenta in cuentas:
 
-            # Transacciones enviadas
-            for t in cuenta.transacciones_origen.all():
-                transacciones.append(
-                    {
-                        "tipo": "Enviado",
-                        "monto": t.monto,
-                        "estado": t.estado,
-                    }
-                )
+        # Enviadas
+        for t in cuenta.transacciones_origen.all():
+            transacciones.append(
+                {
+                    "direccion": "Enviado",
+                    "tipo": t.tipo_transaccion,
+                    "monto": t.monto,
+                    "estado": t.estado,
+                    "fecha": t.fecha,
+                }
+            )
 
-            # Transacciones recibidas
-            for t in cuenta.transacciones_destino.all():
-                transacciones.append(
-                    {
-                        "tipo": "Recibido",
-                        "monto": t.monto,
-                        "estado": t.estado,
-                    }
-                )
+        # Recibidas
+        for t in cuenta.transacciones_destino.all():
+            transacciones.append(
+                {
+                    "direccion": "Recibido",
+                    "tipo": t.tipo_transaccion,
+                    "monto": t.monto,
+                    "estado": t.estado,
+                    "fecha": t.fecha,
+                }
+            )
 
-    except:
-        cuentas = []
-        transacciones = []
+    transacciones.sort(key=lambda x: x["fecha"], reverse=True)
 
     return render(
         request,
@@ -68,14 +71,14 @@ def transferencia_interna(request):
     try:
         cliente = request.user.cliente
         cuentas_cliente = cliente.cuentas.all()
-    except:
+    except AttributeError:
         cuentas_cliente = []
+
+    choices = _get_choices(cuentas_cliente)
 
     if request.method == "POST":
         form = TransferenciaInternaForm(request.POST)
-        form.fields["cuenta_origen"].choices = [
-            (c.id, c.numero_cuenta) for c in cuentas_cliente
-        ]
+        form.fields["cuenta_origen"].choices = choices
 
         if form.is_valid():
             cuenta_origen = Account.objects.get(id=form.cleaned_data["cuenta_origen"])
@@ -85,6 +88,7 @@ def transferencia_interna(request):
             try:
                 cuenta_destino = Account.objects.get(numero_cuenta=numero_destino)
 
+                # Segunda línea de defensa (el form ya valida esto)
                 if cuenta_origen.saldo_actual < monto:
                     messages.error(request, "Saldo insuficiente")
                     return redirect("transferencia_interna")
@@ -112,9 +116,7 @@ def transferencia_interna(request):
 
     else:
         form = TransferenciaInternaForm()
-        form.fields["cuenta_origen"].choices = [
-            (c.id, c.numero_cuenta) for c in cuentas_cliente
-        ]
+        form.fields["cuenta_origen"].choices = choices
 
     return render(request, "transferencia_interna.html", {"form": form})
 
@@ -125,14 +127,14 @@ def transferencia_externa(request):
     try:
         cliente = request.user.cliente
         cuentas_cliente = cliente.cuentas.all()
-    except:
+    except AttributeError:
         cuentas_cliente = []
+
+    choices = _get_choices(cuentas_cliente)
 
     if request.method == "POST":
         form = TransferenciaExternaForm(request.POST)
-        form.fields["cuenta_origen"].choices = [
-            (c.id, c.numero_cuenta) for c in cuentas_cliente
-        ]
+        form.fields["cuenta_origen"].choices = choices
 
         if form.is_valid():
             cuenta_origen = Account.objects.get(id=form.cleaned_data["cuenta_origen"])
@@ -140,6 +142,7 @@ def transferencia_externa(request):
             url_destino = form.cleaned_data["url_banco_destino"]
             monto = form.cleaned_data["monto"]
 
+            # Segunda línea de defensa (el form ya valida esto)
             if cuenta_origen.saldo_actual < monto:
                 messages.error(request, "Saldo insuficiente")
                 return redirect("transferencia_externa")
@@ -173,13 +176,11 @@ def transferencia_externa(request):
                 else:
                     messages.error(request, "Error del banco destino")
 
-            except Exception:
+            except requests.RequestException:
                 messages.error(request, "No se pudo conectar al banco destino")
 
     else:
         form = TransferenciaExternaForm()
-        form.fields["cuenta_origen"].choices = [
-            (c.id, c.numero_cuenta) for c in cuentas_cliente
-        ]
+        form.fields["cuenta_origen"].choices = choices
 
     return render(request, "transferencia_externa.html", {"form": form})

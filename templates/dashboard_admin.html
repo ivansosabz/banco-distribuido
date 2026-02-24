@@ -1,39 +1,49 @@
 {% extends "base.html" %}
-
 {% block title %}Panel del Banco{% endblock %}
-
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">🏦 Panel del Banco</h2>
-    <span class="badge bg-primary fs-6">{{ cuentas|length }} cuentas</span>
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="page-title">Panel del Banco</h2>
+    <span class="badge rounded-pill"
+        style="background:var(--accent);color:var(--brand);font-size:.85rem;padding:.45em 1em;font-weight:600;">
+        {{ cuentas|length }} cuentas registradas
+    </span>
 </div>
 
 {% if cuentas %}
-<div class="table-responsive">
-    <table class="table table-hover align-middle shadow-sm">
-        <thead class="table-primary">
-            <tr>
-                <th>Número de cuenta</th>
-                <th>Cliente</th>
-                <th>Moneda</th>
-                <th>Saldo</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for cuenta in cuentas %}
-            <tr>
-                <td><code>{{ cuenta.numero_cuenta }}</code></td>
-                <td>{{ cuenta.cliente.nombres }} {{ cuenta.cliente.apellidos }}</td>
-                <td>{{ cuenta.moneda }}</td>
-                <td class="fw-bold">${{ cuenta.saldo_actual }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="card border-0">
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>N° de Cuenta</th>
+                    <th>Cliente</th>
+                    <th>Moneda</th>
+                    <th class="text-end">Saldo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cuenta in cuentas %}
+                <tr>
+                    <td><code>{{ cuenta.numero_cuenta }}</code></td>
+                    <td>{{ cuenta.cliente.nombres }} {{ cuenta.cliente.apellidos }}</td>
+                    <td>
+                        <span class="badge rounded-pill"
+                            style="background:var(--surface-soft);color:var(--text);border:1px solid var(--border);font-weight:500;">
+                            {{ cuenta.moneda }}
+                        </span>
+                    </td>
+                    <td class="text-end fw-bold" style="color:var(--brand);">${{ cuenta.saldo_actual }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% else %}
-<div class="alert alert-info">
-    📭 No hay cuentas registradas en el sistema.
+<div class="alert alert-info border-0 rounded-3">
+    No hay cuentas registradas en el sistema.
 </div>
 {% endif %}
+
 {% endblock %}

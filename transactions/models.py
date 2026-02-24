@@ -22,7 +22,11 @@ class Transaction(models.Model):
     tipo_transaccion = models.CharField(max_length=20, choices=TipoTransaccion.choices)
 
     cuenta_origen = models.ForeignKey(
-        Account, on_delete=models.CASCADE, related_name="transacciones_origen"
+        Account,
+        on_delete=models.CASCADE,
+        related_name="transacciones_origen",
+        null=True,
+        blank=True,
     )
 
     cuenta_destino = models.ForeignKey(

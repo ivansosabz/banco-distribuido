@@ -1,65 +1,100 @@
 {% extends "base.html" %}
-
-{% block title %}Cliente{% endblock %}
-
+{% block title %}Mi Dashboard{% endblock %}
 {% block content %}
-<div class="d-flex gap-2 mb-4">
-    <a href="{% url 'transferencia_interna' %}" class="btn btn-primary">
-        Realizar Transferencia
+
+<!-- Acciones rápidas -->
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <a href="{% url 'transferencia_interna' %}" class="btn btn-primary px-4">
+        ⇄ Transferencia Interna
     </a>
-    <a href="{% url 'transferencia_externa' %}" class="btn btn-warning">
-        Transferencia Externa
+    <a href="{% url 'transferencia_externa' %}" class="btn btn-accent px-4">
+        ↗ Transferencia Externa
     </a>
 </div>
 
-<h2 class="mb-3">Mis Cuentas</h2>
+<!-- Cuentas -->
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="page-title">Mis Cuentas</h2>
+    <span class="badge rounded-pill" style="background:var(--brand);font-size:.8rem;padding:.4em .85em;">
+        {{ cuentas|length }} cuenta{{ cuentas|length|pluralize:"s" }}
+    </span>
+</div>
+
 {% if cuentas %}
-<div class="row">
+<div class="row g-3 mb-2">
     {% for cuenta in cuentas %}
-    <div class="col-md-4 mb-3">
-        <div class="card h-100 shadow-sm">
+    <div class="col-sm-6 col-lg-4">
+        <div class="card h-100" style="border-top:3px solid var(--brand-light);">
             <div class="card-body">
-                <h5 class="card-title">Cuenta {{ cuenta.numero_cuenta }}</h5>
-                <p class="card-text mb-1"><strong>Moneda:</strong> {{ cuenta.moneda }}</p>
-                <p class="card-text"><strong>Saldo:</strong> {{ cuenta.saldo_actual }}</p>
+                <p class="text-muted small mb-1" style="letter-spacing:.5px;">CUENTA</p>
+                <h5 class="fw-600 mb-3" style="font-family:'DM Sans',sans-serif;letter-spacing:.3px;">
+                    {{ cuenta.numero_cuenta }}
+                </h5>
+                <div class="d-flex justify-content-between align-items-end">
+                    <div>
+                        <p class="mb-0 text-muted small">Moneda</p>
+                        <span class="fw-500">{{ cuenta.moneda }}</span>
+                    </div>
+                    <div class="text-end">
+                        <p class="mb-0 text-muted small">Saldo</p>
+                        <span class="fs-5 fw-bold" style="color:var(--brand);">{{ cuenta.saldo_actual }}</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
 {% else %}
-<div class="alert alert-info">No tienes cuentas asociadas.</div>
+<div class="alert alert-info border-0 rounded-3">No tienes cuentas asociadas.</div>
 {% endif %}
 
-<h3 class="mt-4 mb-3">Historial de Transacciones</h3>
+<hr class="section-divider">
+
+<!-- Transacciones -->
+<h2 class="page-title mb-3">Historial de Transacciones</h2>
+
 {% if transacciones %}
-<div class="table-responsive">
-    <table class="table table-sm table-hover shadow-sm">
-        <thead class="table-light">
-            <tr>
-                <th>Tipo</th>
-                <th>Monto</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for t in transacciones %}
-            <tr>
-                <td>
-                    {% if t.tipo == "Enviado" %}
-                    <span class="text-danger fw-bold">Enviado</span>
-                    {% else %}
-                    <span class="text-success fw-bold">Recibido</span>
-                    {% endif %}
-                </td>
-                <td>{{ t.monto }}</td>
-                <td>{{ t.estado }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Dirección</th>
+                    <th>Tipo</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transacciones %}
+                <tr>
+                    <td>
+                        {% if t.direccion == "Enviado" %}
+                        <span class="badge badge-enviado rounded-pill px-3 py-1">↑ Enviado</span>
+                        {% else %}
+                        <span class="badge badge-recibido rounded-pill px-3 py-1">↓ Recibido</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if t.tipo == "interna" %}
+                        <span class="badge badge-interna rounded-2 px-3 py-1">Interna</span>
+                        {% else %}
+                        <span class="badge badge-externa rounded-2 px-3 py-1">Externa</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-500">{{ t.monto }}</td>
+                    <td><span class="text-muted">{{ t.estado }}</span></td>
+                    <td class="text-muted small">{{ t.fecha }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% else %}
-<div class="alert alert-info">No hay transacciones registradas.</div>
+<div class="alert alert-info border-0 rounded-3">No hay transacciones registradas.</div>
 {% endif %}
+
 {% endblock %}
