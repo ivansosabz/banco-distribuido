@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "transactions",
     "api",
     "web",
+    "banks",
 ]
 
 MIDDLEWARE = [
@@ -120,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "America/Asuncion"
+TIME_ZONE = "America/Asuncion   "
 
 USE_I18N = True
 

@@ -2,6 +2,7 @@ import uuid
 from django.db import models, transaction as db_transaction
 from django.utils import timezone
 from accounts.models import Account
+from banks.models import Bank
 import requests
 
 
@@ -38,9 +39,18 @@ class Transaction(models.Model):
     )
 
     numero_cuenta_externa = models.CharField(
-        max_length=20, 
-        null=True, 
-        blank=True
+        max_length=20,
+        null=True,
+        blank=True,
+    )
+
+    # ← NUEVO: banco destino para transferencias externas
+    banco_destino = models.ForeignKey(
+        Bank,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="transacciones",
     )
 
     monto = models.DecimalField(max_digits=15, decimal_places=2)
@@ -72,22 +82,26 @@ class Transaction(models.Model):
             self.save()
             return "Saldo insuficiente"
 
-        with db_transaction.atomic():  # significa que se hará todo o nada, si algo falla, se revierte todo
+        with db_transaction.atomic():
             self.cuenta_origen.saldo_actual -= self.monto
             self.cuenta_destino.saldo_actual += self.monto
-
             self.cuenta_origen.save()
             self.cuenta_destino.save()
-
             self.estado = self.EstadoTransaccion.COMPLETADA
             self.save()
 
         return "Transferencia interna completada"
 
-    def procesar_transferencia_externa(self, url_destino):
-
+    def procesar_transferencia_externa(self):
+        """
+        Usa self.banco_destino (objeto Bank) para obtener la URL.
+        Ya no recibe url_destino como parámetro.
+        """
         if self.tipo_transaccion != self.TipoTransaccion.EXTERNA:
             raise ValueError("No es una transferencia externa")
+
+        if not self.banco_destino:
+            raise ValueError("No se especificó un banco destino")
 
         if self.monto <= 0:
             self.estado = self.EstadoTransaccion.RECHAZADA
@@ -100,12 +114,12 @@ class Transaction(models.Model):
             return "Saldo insuficiente"
 
         try:
-            # Descontar saldo
+            # Descontar saldo antes de intentar
             self.cuenta_origen.saldo_actual -= self.monto
             self.cuenta_origen.save()
 
             response = requests.post(
-                url_destino,
+                self.banco_destino.url_api,  # ← URL viene del objeto Bank
                 json={
                     "banco_origen": "Banco Distribuido",
                     "cuenta_destino": self.numero_cuenta_externa,
@@ -113,8 +127,6 @@ class Transaction(models.Model):
                 },
                 timeout=5,
             )
-            print(response.status_code)
-            print(response.text)
 
             if response.status_code == 200:
                 self.estado = self.EstadoTransaccion.COMPLETADA
@@ -122,21 +134,17 @@ class Transaction(models.Model):
                 return "Transferencia externa completada"
 
             else:
-                # Revertir
+                # Revertir saldo
                 self.cuenta_origen.saldo_actual += self.monto
                 self.cuenta_origen.save()
-
                 self.estado = self.EstadoTransaccion.RECHAZADA
                 self.save()
+                return f"Error en banco destino: {response.status_code}"
 
-                return "Error en banco destino"
-
-        except Exception as e:
-            # Revertir
+        except requests.RequestException as e:
+            # Revertir saldo
             self.cuenta_origen.saldo_actual += self.monto
             self.cuenta_origen.save()
-
             self.estado = self.EstadoTransaccion.RECHAZADA
             self.save()
-
             return f"Error de conexión: {str(e)}"

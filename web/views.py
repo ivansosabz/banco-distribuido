@@ -121,6 +121,70 @@ def transferencia_interna(request):
     return render(request, "transferencia_interna.html", {"form": form})
 
 
+# @login_required
+# def transferencia_externa(request):
+#
+#     try:
+#         cliente = request.user.cliente
+#         cuentas_cliente = cliente.cuentas.all()
+#     except AttributeError:
+#         cuentas_cliente = []
+#
+#     choices = _get_choices(cuentas_cliente)
+#
+#     if request.method == "POST":
+#         form = TransferenciaExternaForm(request.POST)
+#         form.fields["cuenta_origen"].choices = choices
+#
+#         if form.is_valid():
+#             cuenta_origen = Account.objects.get(id=form.cleaned_data["cuenta_origen"])
+#             numero_destino = form.cleaned_data["numero_cuenta_destino"]
+#             url_destino = form.cleaned_data["url_banco_destino"]
+#             monto = form.cleaned_data["monto"]
+#
+#             # Segunda línea de defensa (el form ya valida esto)
+#             if cuenta_origen.saldo_actual < monto:
+#                 messages.error(request, "Saldo insuficiente")
+#                 return redirect("transferencia_externa")
+#
+#             try:
+#                 response = requests.post(
+#                     url_destino,
+#                     json={
+#                         "banco_origen": "Banco Distribuido",
+#                         "cuenta_destino": numero_destino,
+#                         "monto": float(monto),
+#                     },
+#                     timeout=5,
+#                 )
+#
+#                 if response.status_code == 200:
+#                     cuenta_origen.saldo_actual -= monto
+#                     cuenta_origen.save()
+#
+#                     Transaction.objects.create(
+#                         tipo_transaccion=Transaction.TipoTransaccion.EXTERNA,
+#                         cuenta_origen=cuenta_origen,
+#                         numero_cuenta_externa=numero_destino,
+#                         monto=monto,
+#                         moneda=cuenta_origen.moneda,
+#                         estado=Transaction.EstadoTransaccion.COMPLETADA,
+#                     )
+#
+#                     messages.success(request, "Transferencia externa completada")
+#                     return redirect("dashboard")
+#                 else:
+#                     messages.error(request, "Error del banco destino")
+#
+#             except requests.RequestException:
+#                 messages.error(request, "No se pudo conectar al banco destino")
+#
+#     else:
+#         form = TransferenciaExternaForm()
+#         form.fields["cuenta_origen"].choices = choices
+#
+#     return render(request, "transferencia_externa.html", {"form": form})
+
 @login_required
 def transferencia_externa(request):
 
@@ -139,17 +203,16 @@ def transferencia_externa(request):
         if form.is_valid():
             cuenta_origen = Account.objects.get(id=form.cleaned_data["cuenta_origen"])
             numero_destino = form.cleaned_data["numero_cuenta_destino"]
-            url_destino = form.cleaned_data["url_banco_destino"]
+            banco = form.cleaned_data["banco_destino"]  # objeto Bank
             monto = form.cleaned_data["monto"]
 
-            # Segunda línea de defensa (el form ya valida esto)
             if cuenta_origen.saldo_actual < monto:
                 messages.error(request, "Saldo insuficiente")
                 return redirect("transferencia_externa")
 
             try:
                 response = requests.post(
-                    url_destino,
+                    banco.url_api,  # ← la URL viene del objeto Bank
                     json={
                         "banco_origen": "Banco Distribuido",
                         "cuenta_destino": numero_destino,
@@ -166,15 +229,16 @@ def transferencia_externa(request):
                         tipo_transaccion=Transaction.TipoTransaccion.EXTERNA,
                         cuenta_origen=cuenta_origen,
                         numero_cuenta_externa=numero_destino,
+                        banco_destino=banco,  # ← guardamos el banco usado
                         monto=monto,
                         moneda=cuenta_origen.moneda,
                         estado=Transaction.EstadoTransaccion.COMPLETADA,
                     )
 
-                    messages.success(request, "Transferencia externa completada")
+                    messages.success(request, f"Transferencia a {banco.nombre} completada")
                     return redirect("dashboard")
                 else:
-                    messages.error(request, "Error del banco destino")
+                    messages.error(request, f"Error del banco destino: {response.status_code}")
 
             except requests.RequestException:
                 messages.error(request, "No se pudo conectar al banco destino")

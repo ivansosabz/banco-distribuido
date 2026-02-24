@@ -1,5 +1,6 @@
 from django import forms
 from accounts.models import Account
+from banks.models import Bank
 
 
 class TransferenciaInternaForm(forms.Form):
@@ -9,7 +10,6 @@ class TransferenciaInternaForm(forms.Form):
 
     def __init__(self, *args, cuenta_origen_obj=None, **kwargs):
         super().__init__(*args, **kwargs)
-        # Guardamos la cuenta origen para validaciones cruzadas
         self._cuenta_origen_obj = cuenta_origen_obj
 
     def clean_monto(self):
@@ -20,11 +20,8 @@ class TransferenciaInternaForm(forms.Form):
 
     def clean_numero_cuenta_destino(self):
         numero_destino = self.cleaned_data.get("numero_cuenta_destino")
-
-        # Verificar que la cuenta destino existe
         if not Account.objects.filter(numero_cuenta=numero_destino).exists():
             raise forms.ValidationError("La cuenta destino no existe.")
-
         return numero_destino
 
     def clean(self):
@@ -36,30 +33,27 @@ class TransferenciaInternaForm(forms.Form):
         if cuenta_origen_id and numero_destino:
             try:
                 cuenta_origen = Account.objects.get(id=cuenta_origen_id)
-
-                # No transferir a sí mismo
                 if cuenta_origen.numero_cuenta == numero_destino:
                     raise forms.ValidationError("No puedes transferir a tu propia cuenta.")
-
-                # Validar saldo suficiente
                 if monto and cuenta_origen.saldo_actual < monto:
                     raise forms.ValidationError(
                         f"Saldo insuficiente. Saldo disponible: {cuenta_origen.saldo_actual} {cuenta_origen.moneda}."
                     )
-
             except Account.DoesNotExist:
-                pass  # Ya manejado en views.py
+                pass
 
         return cleaned_data
 
 
 class TransferenciaExternaForm(forms.Form):
     cuenta_origen = forms.ChoiceField(label="Cuenta Origen")
-    numero_cuenta_destino = forms.CharField(label="Cuenta Destino Externa")
-    url_banco_destino = forms.URLField(
-        label="URL Banco Destino",
-        help_text="Debe comenzar con http:// o https://"
+    # ← NUEVO: dropdown de bancos en lugar de campo URL libre
+    banco_destino = forms.ModelChoiceField(
+        queryset=Bank.objects.filter(activo=True),
+        label="Banco Destino",
+        empty_label="-- Seleccionar banco --",
     )
+    numero_cuenta_destino = forms.CharField(label="Número de Cuenta Destino")
     monto = forms.DecimalField(label="Monto", max_digits=12, decimal_places=2, min_value=0.01)
 
     def clean_monto(self):
@@ -76,14 +70,11 @@ class TransferenciaExternaForm(forms.Form):
         if cuenta_origen_id and monto:
             try:
                 cuenta_origen = Account.objects.get(id=cuenta_origen_id)
-
-                # Validar saldo suficiente
                 if cuenta_origen.saldo_actual < monto:
                     raise forms.ValidationError(
                         f"Saldo insuficiente. Saldo disponible: {cuenta_origen.saldo_actual} {cuenta_origen.moneda}."
                     )
-
             except Account.DoesNotExist:
-                pass  # Ya manejado en views.py
+                pass
 
         return cleaned_data
