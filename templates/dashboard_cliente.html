@@ -52,10 +52,17 @@
 <hr class="section-divider">
 
 <!-- Transacciones -->
-<h2 class="page-title mb-3">Historial de Transacciones</h2>
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="page-title">Historial de Transacciones</h2>
+    {% if page_obj.paginator.count %}
+    <span class="text-muted small">
+        {{ page_obj.paginator.count }} transacción{{ page_obj.paginator.count|pluralize:"es" }} en total
+    </span>
+    {% endif %}
+</div>
 
-{% if transacciones %}
-<div class="card border-0 shadow-sm">
+{% if page_obj.object_list %}
+<div class="card border-0 shadow-sm mb-3">
     <div class="table-responsive">
         <table class="table mb-0">
             <thead>
@@ -68,7 +75,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for t in transacciones %}
+                {% for t in page_obj %}
                 <tr>
                     <td>
                         {% if t.direccion == "Enviado" %}
@@ -93,6 +100,50 @@
         </table>
     </div>
 </div>
+
+<!-- Paginación -->
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Paginación de transacciones">
+    <ul class="pagination pagination-sm justify-content-center gap-1 mb-0">
+
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1" style="border-radius:6px;">«</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" style="border-radius:6px;">‹</a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active">
+            <span class="page-link" style="border-radius:6px;background:var(--brand);border-color:var(--brand);">
+                {{ num }}
+            </span>
+        </li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+            <a class="page-link" href="?page={{ num }}" style="border-radius:6px;">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}" style="border-radius:6px;">›</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" style="border-radius:6px;">»</a>
+            </li>
+            {% endif %}
+
+    </ul>
+    <p class="text-center text-muted small mt-2 mb-0">
+        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+    </p>
+</nav>
+{% endif %}
+
 {% else %}
 <div class="alert alert-info border-0 rounded-3">No hay transacciones registradas.</div>
 {% endif %}

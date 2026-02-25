@@ -1,13 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Transferencia Externa{% endblock %}
 {% block content %}
-
 <div class="row justify-content-center mt-2">
     <div class="col-sm-10 col-md-7 col-lg-5">
-
         <div class="card border-0" style="border-top:3px solid var(--accent) !important;">
             <div class="card-body p-4 p-sm-5">
-
                 <div class="mb-4">
                     <p class="text-muted small mb-1"
                         style="letter-spacing:.5px;text-transform:uppercase;font-size:.75rem;">Operación</p>
@@ -17,8 +14,15 @@
                     </h2>
                     <p class="text-muted small mb-0">Envío de fondos a otro banco</p>
                 </div>
-
                 <hr style="border-color:var(--border);margin-bottom:1.5rem;">
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger small py-2 px-3 mb-3" style="border-radius:8px;">
+                    {% for error in form.non_field_errors %}
+                    <div>⚠ {{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
 
                 <form method="post">
                     {% csrf_token %}
@@ -34,7 +38,6 @@
                         {% endif %}
                     </div>
                     {% endfor %}
-
                     <div class="d-flex gap-2 mt-4">
                         <button type="submit" class="btn btn-accent px-4 py-2"
                             style="border-radius:8px;font-weight:600;">
@@ -46,15 +49,11 @@
                         </a>
                     </div>
                 </form>
-
             </div>
         </div>
-
     </div>
 </div>
-
 <style>
-    /* Aplicar estilos consistentes a los inputs generados por Django */
     #content input,
     #content select,
     #content textarea {
@@ -73,5 +72,4 @@
         outline: none !important;
     }
 </style>
-
 {% endblock %}
